@@ -1,24 +1,42 @@
 import Phaser from 'phaser';
 
 export default class Demo extends Phaser.Scene {
+  private controls: Phaser.Cameras.Controls.FixedKeyControl | undefined;
   constructor() {
     super('GameScene');
   }
 
   preload() {
-    this.load.image('logo', 'assets/phaser3-logo.png');
+    this.load.image('tiles', 'assets/tileset.png');
+    this.load.tilemapTiledJSON('map', 'assets/level1.json');
   }
 
   create() {
-    const logo = this.add.image(400, 70, 'logo');
+    const map = this.make.tilemap({key: 'map'});
+    const tileset = map.addTilesetImage('tileset', 'tiles');
+    const layer = map.createLayer(0, tileset, 0, 0);
 
-    this.tweens.add({
-      targets: logo,
-      y: 350,
-      duration: 1500,
-      ease: 'Sine.inOut',
-      yoyo: true,
-      repeat: -1
+    this.cameras.main.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
+
+    var cursors = this.input.keyboard.createCursorKeys();
+    var controlConfig = {
+      camera: this.cameras.main,
+      left: cursors.left,
+      right: cursors.right,
+      up: cursors.up,
+      down: cursors.down,
+      speed: 0.5
+    };
+    this.controls = new Phaser.Cameras.Controls.FixedKeyControl(controlConfig);
+
+    var help = this.add.text(16, 16, 'Arrow keys to scroll', {
+      fontSize: '18px',
+      padding: { x: 10, y: 5 },
+      backgroundColor: '#000000'
     });
+    help.setScrollFactor(0);
+  }
+  update(time:number, delta:number) {
+    this.controls?.update(delta);
   }
 }
