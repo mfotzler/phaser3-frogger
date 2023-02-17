@@ -13,8 +13,8 @@ export default class Demo extends Phaser.Scene {
 
   create() {
     const map = this.make.tilemap({key: 'map'});
-    const tileset = map.addTilesetImage('tileset', 'tiles');
-    const layer = map.createLayer(0, tileset, 0, 0);
+    const tileset = map.addTilesetImage('spritesheet', 'tiles');
+    const layer = map.createLayer(0, tileset, 0, 130);
 
     this.cameras.main.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
 
@@ -28,13 +28,6 @@ export default class Demo extends Phaser.Scene {
       speed: 0.5
     };
     this.controls = new Phaser.Cameras.Controls.FixedKeyControl(controlConfig);
-
-    var help = this.add.text(16, 16, 'Arrow keys to scroll', {
-      fontSize: '18px',
-      padding: { x: 10, y: 5 },
-      backgroundColor: '#000000'
-    });
-    help.setScrollFactor(0);
   }
   update(time:number, delta:number) {
     this.controls?.update(delta);
