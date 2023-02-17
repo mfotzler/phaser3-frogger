@@ -23,12 +23,21 @@ export default class FroggerGame extends Phaser.Scene {
         this.load.image('frog', 'assets/frog.png');
         this.load.image('car-kun', 'assets/car-kun.png');
         this.load.image('truck-kun', 'assets/truck-kun.png');
+        this.load.audio('bgm', 'assets/bgm.ogg');
     }
 
     create():void {
+        this.initializeMusic();
         this.initializeMapAndCameras();
         this.initializeEntities();
         this.addFrogInputListeners();
+    }
+
+    private initializeMusic():void {
+        const bgm = this.sound.add('bgm');
+        bgm.play({
+            loop: true
+        });
     }
 
     update(time: number, delta: number):void {
