@@ -73,14 +73,12 @@ export default class FroggerGame extends Phaser.Scene {
     }
 
     private spawnTruck() {
-        if (this.trucks && this.trucks.countActive() < 50) {
-            const randomLane = Phaser.Math.Between(0, 4);
-            const y = this.game.config.height as number - this.laneYValues[randomLane];
-            const truck = this.trucks.get(-128, y) as Phaser.GameObjects.Sprite;
-            if(truck) {
-                truck.setActive(true);
-                truck.setVisible(true);
-            }
+        const randomLane = Phaser.Math.Between(0, 4);
+        const y = this.game.config.height as number - this.laneYValues[randomLane];
+        const truck = this.trucks!.get(-128, y) as Phaser.GameObjects.Sprite;
+        if(truck) {
+            truck.setActive(true);
+            truck.setVisible(true);
         }
     }
 }
