@@ -3,11 +3,13 @@ import {Frog} from "../entities/Frog";
 import GameObject = Phaser.GameObjects.GameObject;
 import Sprite = Phaser.GameObjects.Sprite;
 import {Truck} from "../entities/Truck";
+import {Car} from "../entities/Car";
 
 export default class FroggerGame extends Phaser.Scene {
     private frog?: Frog;
     private trucks?: Phaser.GameObjects.Group;
-    private spawnDelay:number = 1000;
+    private cars?: Phaser.GameObjects.Group;
+    private spawnDelay:number = 2000;
 
     private laneYValues:number[] = [256, 384, 512, 640, 768];
 
@@ -15,7 +17,7 @@ export default class FroggerGame extends Phaser.Scene {
         super('GameScene');
     }
 
-    preload() {
+    preload():void {
         this.load.image('tiles', 'assets/tileset.png');
         this.load.tilemapTiledJSON('map', 'assets/level1.json');
         this.load.image('frog', 'assets/frog.png');
@@ -23,16 +25,16 @@ export default class FroggerGame extends Phaser.Scene {
         this.load.image('truck-kun', 'assets/truck-kun.png');
     }
 
-    create() {
+    create():void {
         this.initializeMapAndCameras();
         this.initializeEntities();
         this.addFrogInputListeners();
     }
 
-    update(time: number, delta: number) {
+    update(time: number, delta: number):void {
     }
 
-    addFrogInputListeners() {
+    addFrogInputListeners():void {
         this.input.keyboard.on('keydown-UP', () => {
             if (this.frog)
                 this.frog.y -= 128;
@@ -51,38 +53,64 @@ export default class FroggerGame extends Phaser.Scene {
         });
     }
 
-    private initializeEntities() {
+    private initializeEntities():void {
         this.frog = new Frog(this, 0, this.game.config.height as number - 128);
         this.trucks = this.physics.add.group({
             classType: Truck,
             maxSize: 30,
             runChildUpdate: true,
         });
-        this.physics.add.collider(this.frog!, this.trucks!, () => {
-            this.frog!.x = 0;
-            this.frog!.y = this.game.config.height as number - 128;
-        });
         this.time.addEvent({
             delay: this.spawnDelay,
             loop: true,
             callback: () => this.spawnTruck()
         });
+        this.physics.add.collider(this.frog!, this.trucks!, () => {
+            this.frog!.x = 0;
+            this.frog!.y = this.game.config.height as number - 128;
+        });
+
+        this.cars = this.physics.add.group({
+            classType: Car,
+            maxSize: 30,
+            runChildUpdate: true,
+        });
+        this.physics.add.collider(this.frog!, this.cars!, () => {
+            this.frog!.x = 0;
+            this.frog!.y = this.game.config.height as number - 128;
+        });
+        this.time.addEvent({
+            delay: this.spawnDelay,
+            startAt: this.spawnDelay / 2,
+            loop: true,
+            callback: () => this.spawnCar()
+        });
     }
 
-    private initializeMapAndCameras() {
+    private initializeMapAndCameras():void {
         const map = this.make.tilemap({key: 'map'});
         const tileset = map.addTilesetImage('spritesheet', 'tiles');
         const layer = map.createLayer(0, tileset, 0, 130);
         this.cameras.main.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
     }
 
-    private spawnTruck() {
+    private spawnTruck():void {
         const randomLane = Phaser.Math.Between(0, 4);
         const y = this.game.config.height as number - this.laneYValues[randomLane];
-        const truck = this.trucks!.get(-128, y) as Phaser.GameObjects.Sprite;
+        const truck = this.trucks!.get(-300, y) as Phaser.GameObjects.Sprite;
         if(truck) {
             truck.setActive(true);
             truck.setVisible(true);
+        }
+    }
+
+    private spawnCar():void {
+        const randomLane = Phaser.Math.Between(0, 4);
+        const y = this.game.config.height as number - this.laneYValues[randomLane];
+        const car = this.cars!.get(-300, y) as Phaser.GameObjects.Sprite;
+        if(car) {
+            car.setActive(true);
+            car.setVisible(true);
         }
     }
 }
