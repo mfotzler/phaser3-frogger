@@ -53,10 +53,14 @@ export default class FroggerGame extends Phaser.Scene {
 
     private initializeEntities() {
         this.frog = new Frog(this, 0, this.game.config.height as number - 128);
-        this.trucks = this.add.group({
+        this.trucks = this.physics.add.group({
             classType: Truck,
             maxSize: 30,
-            runChildUpdate: true
+            runChildUpdate: true,
+        });
+        this.physics.add.collider(this.frog!, this.trucks!, () => {
+            this.frog!.x = 0;
+            this.frog!.y = this.game.config.height as number - 128;
         });
         this.time.addEvent({
             delay: this.spawnDelay,
