@@ -10,6 +10,7 @@ export default class FroggerGame extends Phaser.Scene {
     private trucks?: Phaser.GameObjects.Group;
     private cars?: Phaser.GameObjects.Group;
     private spawnDelay:number = 2000;
+    private isPlayingMusic:boolean = false;
 
     private laneYValues:number[] = [256, 384, 512, 640, 768];
 
@@ -35,9 +36,17 @@ export default class FroggerGame extends Phaser.Scene {
 
     private initializeMusic():void {
         const bgm = this.sound.add('bgm');
-        bgm.play({
-            loop: true
-        });
+        this.input.keyboard.on('keydown-M', () => {
+            if (this.isPlayingMusic) {
+                bgm.stop();
+                this.isPlayingMusic = false;
+            } else {
+                bgm.play({
+                    loop: true
+                });
+                this.isPlayingMusic = true;
+            }
+        })
     }
 
     update(time: number, delta: number):void {
