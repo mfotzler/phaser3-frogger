@@ -14,10 +14,12 @@ export default class FroggerGame extends Phaser.Scene {
     private trucks?: Phaser.GameObjects.Group;
     private cars?: Phaser.GameObjects.Group;
     private logGroups: Phaser.GameObjects.Group[] = [];
+    private scoreZones?: Phaser.GameObjects.Group;
     private waterArea?: Rectangle;
     private spawnDelay:number = 2000;
     private logSpawnDelay:number = 4000;
     private isPlayingMusic:boolean = false;
+    private score: number = 0;
 
     private frogLayer?: Phaser.GameObjects.Layer;
     private logLayer?: Phaser.GameObjects.Layer;
@@ -105,6 +107,7 @@ export default class FroggerGame extends Phaser.Scene {
             if(!isOnLog)
                 this.die();
         });
+        this.initializeScoreZones();
         this.initializeTrucks();
         this.initializeCars();
         this.initializeLogs();
@@ -205,5 +208,35 @@ export default class FroggerGame extends Phaser.Scene {
             delay: Phaser.Math.Between(this.logSpawnDelay - 1000, this.logSpawnDelay + 1000),
             callback: () => this.spawnLog(laneY, group, isMovingLeft)
         });
+    }
+
+    private initializeScoreZones() {
+        this.scoreZones = this.physics.add.group({
+            classType: Rectangle,
+            maxSize: 5,
+            runChildUpdate: true,
+        });
+        this.physics.add.collider(this.frog!, this.scoreZones!, (o1, o2) => {
+            this.score += 200;
+            o2.destroy();
+            this.respawnFrog();
+        });
+
+        for(let i = 0; i < 5; i++) {
+            const y = 128;
+            const zone = this.scoreZones!.get(i * 256, y) as Rectangle;
+            zone.setSize(128, 128);
+            zone.setFillStyle(0xff0000, 0.5);
+
+            if(zone) {
+                zone.setActive(true);
+                zone.setVisible(true);
+            }
+        }
+    }
+
+    private respawnFrog() {
+        this.frog!.x = 0;
+        this.frog!.y = this.game.config.height as number - 128;
     }
 }
