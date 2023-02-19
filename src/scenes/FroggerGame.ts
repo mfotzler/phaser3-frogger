@@ -20,6 +20,10 @@ export default class FroggerGame extends Phaser.Scene {
     private logSpawnDelay:number = 4000;
     private isPlayingMusic:boolean = false;
     private score: number = 0;
+    private scoreText?: Phaser.GameObjects.Text;
+    private lives: number = 3;
+    private livesText?: Phaser.GameObjects.Text;
+    private gameOverText?: Phaser.GameObjects.Text;
 
     private frogLayer?: Phaser.GameObjects.Layer;
     private logLayer?: Phaser.GameObjects.Layer;
@@ -43,6 +47,7 @@ export default class FroggerGame extends Phaser.Scene {
     }
 
     create():void {
+        this.initializeText();
         this.initializeMusic();
         this.initializeMapAndCameras();
         this.initializeEntities();
@@ -87,8 +92,16 @@ export default class FroggerGame extends Phaser.Scene {
     }
 
     private die():void {
-        this.frog!.x = 0;
-        this.frog!.y = this.game.config.height as number - 128;
+        this.lives = this.lives > 0 ? this.lives-1 : 0;
+        if(this.lives <= 0) {
+            this.gameOverText?.setVisible(true);
+            this.frog?.setVisible(false);
+            this.frog?.setActive(false);
+        } else {
+            this.frog!.x = 0;
+            this.frog!.y = this.game.config.height as number - 128;
+        }
+        this.livesText?.setText(`Lives: ${this.lives}`);
     }
 
     private initializeEntities():void {
@@ -220,6 +233,7 @@ export default class FroggerGame extends Phaser.Scene {
             this.score += 200;
             o2.destroy();
             this.respawnFrog();
+            this.scoreText!.setText(`Score: ${this.score}`);
         });
 
         for(let i = 0; i < 5; i++) {
@@ -238,5 +252,17 @@ export default class FroggerGame extends Phaser.Scene {
     private respawnFrog() {
         this.frog!.x = 0;
         this.frog!.y = this.game.config.height as number - 128;
+    }
+
+    private initializeText() {
+        this.scoreText = this.add.text(16, 16, 'Score: 0', {fontSize: '32px', color: '#ffffff'});
+        this.scoreText.depth = 20;
+        this.livesText = this.add.text(16, 64, 'Lives: 3', {fontSize: '32px', color: '#ffffff'});
+        this.livesText.depth = 20;
+
+        this.gameOverText = this.add.text(this.game.config.width as number / 2, this.game.config.height as number / 2 - 40, 'Game Over', {fontSize: '72px', color: '#ffffff'});
+        this.gameOverText.setOrigin(0.5);
+        this.gameOverText.depth = 20;
+        this.gameOverText.setVisible(false);
     }
 }
