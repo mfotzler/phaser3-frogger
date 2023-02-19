@@ -15,6 +15,10 @@ export default class FroggerGame extends Phaser.Scene {
     private logSpawnDelay:number = 4000;
     private isPlayingMusic:boolean = false;
 
+    private frogLayer?: Phaser.GameObjects.Layer;
+    private logLayer?: Phaser.GameObjects.Layer;
+
+
     private laneYValues:number[] = [256, 384, 512, 640, 768];
     private waterLanesYBegin:number = 1024;
 
@@ -78,6 +82,9 @@ export default class FroggerGame extends Phaser.Scene {
 
     private initializeEntities():void {
         this.frog = new Frog(this, 0, this.game.config.height as number - 128);
+        this.frogLayer = this.add.layer();
+        this.frogLayer.depth = 10;
+        this.frogLayer.add(this.frog);
         this.initializeTrucks();
         this.initializeCars();
         this.initializeLogs();
@@ -146,6 +153,8 @@ export default class FroggerGame extends Phaser.Scene {
     }
 
     private initializeLogs() {
+        this.logLayer = this.add.layer();
+        this.logLayer.depth = 5;
         for(let i = 0; i < 5; i++) {
             const group = this.physics.add.group({
                 classType: Log,
@@ -157,6 +166,9 @@ export default class FroggerGame extends Phaser.Scene {
                 delay: Phaser.Math.Between(0, 1000),
                 callback: () => this.spawnLog(this.waterLanesYBegin + (i * 128), group, i % 2 == 0)
             });
+            this.physics.add.collider(this.frog!, group, (o1, o2) => {
+                this.frog!.x += (o2 as Log) .isMovingLeft ? -Log.LOG_SPEED : Log.LOG_SPEED
+            });
         }
     }
 
@@ -164,6 +176,7 @@ export default class FroggerGame extends Phaser.Scene {
         const y = this.game.config.height as number - laneY;
         const x = isMovingLeft ? this.game.config.width as number + 100 : -100;
         const log = group.get(x, y) as Log;
+        this.logLayer?.add(log);
         log.isMovingLeft = isMovingLeft;
         if(log) {
             log.setActive(true);

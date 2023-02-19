@@ -1,7 +1,7 @@
 import Sprite = Phaser.GameObjects.Sprite;
 
 export class Log extends Sprite {
-    private static readonly LOG_SPEED = 4;
+    static readonly LOG_SPEED = 4;
     isMovingLeft: boolean = true;
     constructor(scene: Phaser.Scene, x: number, y: number) {
         super(scene, x, y, 'log');
