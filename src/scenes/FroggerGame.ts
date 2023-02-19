@@ -15,6 +15,7 @@ export default class FroggerGame extends Phaser.Scene {
     private cars?: Phaser.GameObjects.Group;
     private logGroups: Phaser.GameObjects.Group[] = [];
     private scoreZones?: Phaser.GameObjects.Group;
+    private deathZones?: Phaser.GameObjects.Group;
     private waterArea?: Rectangle;
     private spawnDelay:number = 2000;
     private logSpawnDelay:number = 4000;
@@ -98,8 +99,7 @@ export default class FroggerGame extends Phaser.Scene {
             this.frog?.setVisible(false);
             this.frog?.setActive(false);
         } else {
-            this.frog!.x = 0;
-            this.frog!.y = this.game.config.height as number - 128;
+            this.respawnFrog();
         }
         this.livesText?.setText(`Lives: ${this.lives}`);
     }
@@ -114,6 +114,7 @@ export default class FroggerGame extends Phaser.Scene {
         this.frogLayer = this.add.layer();
         this.frogLayer.depth = 10;
         this.frogLayer.add(this.frog);
+        this.respawnFrog();
 
         this.physics.add.overlap(this.frog!, this.waterArea!, () => {
             const isOnLog = this.physics.overlap(this.frog!, this.logGroups.flatMap(logGroup => logGroup.getChildren()));
@@ -121,6 +122,7 @@ export default class FroggerGame extends Phaser.Scene {
                 this.die();
         });
         this.initializeScoreZones();
+        this.initializeDeathZones();
         this.initializeTrucks();
         this.initializeCars();
         this.initializeLogs();
@@ -266,7 +268,7 @@ export default class FroggerGame extends Phaser.Scene {
     }
 
     private respawnFrog() {
-        this.frog!.x = 0;
+        this.frog!.x = 4*128;
         this.frog!.y = this.game.config.height as number - 128;
     }
 
@@ -280,5 +282,25 @@ export default class FroggerGame extends Phaser.Scene {
         this.gameOverText.setOrigin(0.5);
         this.gameOverText.depth = 20;
         this.gameOverText.setVisible(false);
+    }
+
+    private initializeDeathZones() {
+        this.deathZones = this.physics.add.group({
+            classType: Rectangle,
+            maxSize: 5,
+            runChildUpdate: true,
+        });
+        this.physics.add.collider(this.frog!, this.deathZones!, () => {
+            this.die();
+        });
+
+        for(let i = 0; i < 4; i++) {
+            const width = 85;
+            const y = 128
+            const zone = this.deathZones!.get(i * 256 + 150, y) as Rectangle;
+            zone.setSize(width, 128);
+            zone.setFillStyle(0xff0000, 0.0);
+            zone.setActive(true);
+        }
     }
 }
