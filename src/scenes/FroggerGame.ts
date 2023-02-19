@@ -223,28 +223,44 @@ export default class FroggerGame extends Phaser.Scene {
         });
     }
 
+    private resetScoreZones() {
+        this.scoreZones?.getChildren().forEach((zone, i) => {
+            zone.setActive(true);
+            (zone as Frog).setVisible(false);
+        });
+    }
+
     private initializeScoreZones() {
         this.scoreZones = this.physics.add.group({
-            classType: Rectangle,
+            classType: Frog,
             maxSize: 5,
             runChildUpdate: true,
         });
         this.physics.add.collider(this.frog!, this.scoreZones!, (o1, o2) => {
+            if(!o2.active) {
+                this.die();
+                return;
+            }
+
             this.score += 200;
-            o2.destroy();
+            o2.setActive(false);
+            (o2 as Frog).setVisible(true);
             this.respawnFrog();
             this.scoreText!.setText(`Score: ${this.score}`);
+
+            if(this.scoreZones?.getChildren().every(zone => !zone.active)) {
+                this.resetScoreZones();
+            }
         });
 
         for(let i = 0; i < 5; i++) {
             const y = 128;
-            const zone = this.scoreZones!.get(i * 256, y) as Rectangle;
+            const zone = this.scoreZones!.get(i * 256, y) as Frog;
             zone.setSize(128, 128);
-            zone.setFillStyle(0xff0000, 0.5);
 
             if(zone) {
                 zone.setActive(true);
-                zone.setVisible(true);
+                zone.setVisible(false);
             }
         }
     }
