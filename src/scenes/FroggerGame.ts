@@ -4,15 +4,19 @@ import GameObject = Phaser.GameObjects.GameObject;
 import Sprite = Phaser.GameObjects.Sprite;
 import {Truck} from "../entities/Truck";
 import {Car} from "../entities/Car";
+import {Log} from "../entities/Log";
 
 export default class FroggerGame extends Phaser.Scene {
     private frog?: Frog;
     private trucks?: Phaser.GameObjects.Group;
     private cars?: Phaser.GameObjects.Group;
+    private logGroups: Phaser.GameObjects.Group[] = [];
     private spawnDelay:number = 2000;
+    private logSpawnDelay:number = 4000;
     private isPlayingMusic:boolean = false;
 
     private laneYValues:number[] = [256, 384, 512, 640, 768];
+    private waterLanesYBegin:number = 1024;
 
     constructor() {
         super('GameScene');
@@ -24,6 +28,7 @@ export default class FroggerGame extends Phaser.Scene {
         this.load.image('frog', 'assets/frog.png');
         this.load.image('car-kun', 'assets/car-kun.png');
         this.load.image('truck-kun', 'assets/truck-kun.png');
+        this.load.image('log', 'assets/log.png');
         this.load.audio('bgm', 'assets/bgm.ogg');
     }
 
@@ -73,21 +78,12 @@ export default class FroggerGame extends Phaser.Scene {
 
     private initializeEntities():void {
         this.frog = new Frog(this, 0, this.game.config.height as number - 128);
-        this.trucks = this.physics.add.group({
-            classType: Truck,
-            maxSize: 30,
-            runChildUpdate: true,
-        });
-        this.time.addEvent({
-            delay: this.spawnDelay,
-            loop: true,
-            callback: () => this.spawnTruck()
-        });
-        this.physics.add.collider(this.frog!, this.trucks!, () => {
-            this.frog!.x = 0;
-            this.frog!.y = this.game.config.height as number - 128;
-        });
+        this.initializeTrucks();
+        this.initializeCars();
+        this.initializeLogs();
+    }
 
+    private initializeCars() {
         this.cars = this.physics.add.group({
             classType: Car,
             maxSize: 30,
@@ -102,6 +98,23 @@ export default class FroggerGame extends Phaser.Scene {
             startAt: this.spawnDelay / 2,
             loop: true,
             callback: () => this.spawnCar()
+        });
+    }
+
+    private initializeTrucks() {
+        this.trucks = this.physics.add.group({
+            classType: Truck,
+            maxSize: 30,
+            runChildUpdate: true,
+        });
+        this.time.addEvent({
+            delay: this.spawnDelay,
+            loop: true,
+            callback: () => this.spawnTruck()
+        });
+        this.physics.add.collider(this.frog!, this.trucks!, () => {
+            this.frog!.x = 0;
+            this.frog!.y = this.game.config.height as number - 128;
         });
     }
 
@@ -130,5 +143,36 @@ export default class FroggerGame extends Phaser.Scene {
             car.setActive(true);
             car.setVisible(true);
         }
+    }
+
+    private initializeLogs() {
+        for(let i = 0; i < 5; i++) {
+            const group = this.physics.add.group({
+                classType: Log,
+                maxSize: 30,
+                runChildUpdate: true,
+            });
+            this.logGroups.push(group);
+            this.time.addEvent({
+                delay: Phaser.Math.Between(0, 1000),
+                callback: () => this.spawnLog(this.waterLanesYBegin + (i * 128), group, i % 2 == 0)
+            });
+        }
+    }
+
+    private spawnLog(laneY:number, group:Phaser.GameObjects.Group, isMovingLeft: boolean):void {
+        const y = this.game.config.height as number - laneY;
+        const x = isMovingLeft ? this.game.config.width as number + 100 : -100;
+        const log = group.get(x, y) as Log;
+        log.isMovingLeft = isMovingLeft;
+        if(log) {
+            log.setActive(true);
+            log.setVisible(true);
+        }
+
+        this.time.addEvent({
+            delay: Phaser.Math.Between(this.logSpawnDelay - 1000, this.logSpawnDelay + 1000),
+            callback: () => this.spawnLog(laneY, group, isMovingLeft)
+        });
     }
 }
