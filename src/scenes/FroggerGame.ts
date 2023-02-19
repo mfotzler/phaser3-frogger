@@ -5,12 +5,16 @@ import Sprite = Phaser.GameObjects.Sprite;
 import {Truck} from "../entities/Truck";
 import {Car} from "../entities/Car";
 import {Log} from "../entities/Log";
+import StaticBody = Phaser.Physics.Arcade.StaticBody;
+import Rectangle = Phaser.GameObjects.Rectangle;
+import Body = Phaser.Physics.Arcade.Body;
 
 export default class FroggerGame extends Phaser.Scene {
     private frog?: Frog;
     private trucks?: Phaser.GameObjects.Group;
     private cars?: Phaser.GameObjects.Group;
     private logGroups: Phaser.GameObjects.Group[] = [];
+    private waterArea?: Rectangle;
     private spawnDelay:number = 2000;
     private logSpawnDelay:number = 4000;
     private isPlayingMusic:boolean = false;
@@ -80,11 +84,27 @@ export default class FroggerGame extends Phaser.Scene {
         });
     }
 
+    private die():void {
+        this.frog!.x = 0;
+        this.frog!.y = this.game.config.height as number - 128;
+    }
+
     private initializeEntities():void {
+        this.waterArea = this.add.rectangle(0, this.waterLanesYBegin - (6*125), this.game.config.width as number, (5 * 128) - 20, 0xff0000, 0.0);
+        this.waterArea.setOrigin(0,0);
+        this.physics.add.existing(this.waterArea, false);
+
         this.frog = new Frog(this, 0, this.game.config.height as number - 128);
+        (this.frog.body as Body).setCollideWorldBounds(true);
         this.frogLayer = this.add.layer();
         this.frogLayer.depth = 10;
         this.frogLayer.add(this.frog);
+
+        this.physics.add.overlap(this.frog!, this.waterArea!, () => {
+            const isOnLog = this.physics.overlap(this.frog!, this.logGroups.flatMap(logGroup => logGroup.getChildren()));
+            if(!isOnLog)
+                this.die();
+        });
         this.initializeTrucks();
         this.initializeCars();
         this.initializeLogs();
@@ -97,8 +117,7 @@ export default class FroggerGame extends Phaser.Scene {
             runChildUpdate: true,
         });
         this.physics.add.collider(this.frog!, this.cars!, () => {
-            this.frog!.x = 0;
-            this.frog!.y = this.game.config.height as number - 128;
+            this.die();
         });
         this.time.addEvent({
             delay: this.spawnDelay,
@@ -120,8 +139,7 @@ export default class FroggerGame extends Phaser.Scene {
             callback: () => this.spawnTruck()
         });
         this.physics.add.collider(this.frog!, this.trucks!, () => {
-            this.frog!.x = 0;
-            this.frog!.y = this.game.config.height as number - 128;
+            this.die();
         });
     }
 
@@ -166,7 +184,7 @@ export default class FroggerGame extends Phaser.Scene {
                 delay: Phaser.Math.Between(0, 1000),
                 callback: () => this.spawnLog(this.waterLanesYBegin + (i * 128), group, i % 2 == 0)
             });
-            this.physics.add.collider(this.frog!, group, (o1, o2) => {
+            this.physics.add.overlap(this.frog!, group, (o1, o2) => {
                 this.frog!.x += (o2 as Log) .isMovingLeft ? -Log.LOG_SPEED : Log.LOG_SPEED
             });
         }
